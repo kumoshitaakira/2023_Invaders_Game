@@ -1,0 +1,13 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "/Users/kumo/javafx-sdk-20.0.1/lib/javafx-swt.jar",
+        "/Users/kumo/javafx-sdk-20.0.1/lib/javafx.base.jar",
+        "/Users/kumo/javafx-sdk-20.0.1/lib/javafx.controls.jar",
+        "/Users/kumo/javafx-sdk-20.0.1/lib/javafx.fxml.jar",
+        "/Users/kumo/javafx-sdk-20.0.1/lib/javafx.graphics.jar",
+        "/Users/kumo/javafx-sdk-20.0.1/lib/javafx.media.jar",
+        "/Users/kumo/javafx-sdk-20.0.1/lib/javafx.swing.jar",
+        "/Users/kumo/javafx-sdk-20.0.1/lib/javafx.web.jar"
+    ]
+}
