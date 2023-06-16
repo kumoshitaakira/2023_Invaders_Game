@@ -3,6 +3,7 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -21,6 +22,7 @@ public class InvadersGameClient extends Application {
     private static final int HEIGHT = 600;
     private static final int INVADER_SPEED = 5;
     private static final int GAME_CLEAR_DELAY = 10;
+    private static final int NUM_INVADERS = 20;
 
     private Canvas canvas;
     private GraphicsContext gc;
@@ -33,9 +35,8 @@ public class InvadersGameClient extends Application {
     private double playerX;
     private double playerY;
 
-    private double invaderX;
-    private double invaderY;
-    private boolean invaderDestroyed = false;
+    private List<Invader> invaders;
+    private boolean[] invaderDestroyed;
 
     private double bulletX = WIDTH * 2;
     private double bulletY = 0;
@@ -126,9 +127,18 @@ public class InvadersGameClient extends Application {
     private void initializeGame() {
         playerX = WIDTH / 2;
         playerY = HEIGHT - 50;
-        invaderX = WIDTH / 2;
-        invaderY = 50;
-        invaderDestroyed = false;
+
+        invaders = new ArrayList<>();
+        invaderDestroyed = new boolean[NUM_INVADERS];
+        for (int i = 0; i < NUM_INVADERS; i++) {
+            Random random = new Random();
+            double invaderX = WIDTH / 2 + ((i % 10) - NUM_INVADERS / 2) * random.nextInt(51);
+            random = new Random();
+            double invaderY = ((i % 10) + 1) * random.nextInt(10) * 10;
+            invaders.add(new Invader(invaderX, invaderY));
+            invaderDestroyed[i] = false;
+        }
+
         gameClearTriggered = false;
         explosions = new ArrayList<>();
     }
@@ -138,40 +148,42 @@ public class InvadersGameClient extends Application {
             return;
         }
 
+        for (int i = 0; i < NUM_INVADERS; i++) {
+            Invader invader = invaders.get(i);
+            if (!invaderDestroyed[i]) {
+                invader.move(INVADER_SPEED);
 
-        if (!invaderDestroyed) {
-            invaderX += INVADER_SPEED;
+                if (invader.getX() >= WIDTH) {
+                    invader.setX(0);
+                    invader.setY(invader.getY() + 50);
 
-            if (invaderX >= WIDTH) {
-                invaderX = 0;
-                invaderY += 50;
+                    if (invader.getY() >= HEIGHT) {
+                        invader.setY(0);
+                    }
+                }
+            }
 
-                if (invaderY >= HEIGHT) {
-                    gameOver();
+            if (checkCollision(invader)) {
+                if (!invaderDestroyed[i]) {
+                    createExplosion(invader.getX(), invader.getY());
+                    score += 100;
+                    invaderDestroyed[i] = true;
+                }
+                if (gameClearTriggered) {
+                    gameClear();
                 }
             }
         }
-        
-        if (checkCollision()) {
-            if (!invaderDestroyed) {
-                createExplosion(invaderX, invaderY);
-                invaderDestroyed = true;
-            }
-            if (gameClearTriggered) {
-                gameClear();
-            }
-        }
 
-        if(gameClearTriggered == true && invaderDestroyed == false) gameOver();
-        if(gameClearTriggered == true && invaderDestroyed == true) gameClear();
+        if(gameClearTriggered) gameClear();
 
         if (!gameClearTriggered && ((System.nanoTime() - startTime) / 1_000_000_000) >= GAME_CLEAR_DELAY) {
             gameClearTriggered = true;
         }
     }
 
-    private boolean checkCollision() {
-        double distance = Math.sqrt(Math.pow(invaderX - bulletX, 2) + Math.pow(invaderY - bulletY, 2));
+    private boolean checkCollision(Invader invader) {
+        double distance = Math.sqrt(Math.pow(invader.getX() - bulletX, 2) + Math.pow(invader.getY() - bulletY, 2));
         return distance < 30; // 衝突判定の閾値を設定
     }
 
@@ -220,9 +232,16 @@ public class InvadersGameClient extends Application {
             gc.setFill(Color.GREEN);
             gc.fillRect(playerX - 25, playerY - 12.5, 50, 25);
 
-            if(!invaderDestroyed) {
-                gc.setFill(Color.RED);
-                gc.fillRect(invaderX - 25, invaderY - 25, 50, 25);
+            // if(!invaderDestroyed) {
+            //     gc.setFill(Color.RED);
+            //     gc.fillRect(invaderX - 25, invaderY - 25, 50, 25);
+            // }
+            for (int i = 0; i < NUM_INVADERS; i++) {
+                if (!invaderDestroyed[i]) {
+                    Invader invader = invaders.get(i);
+                    gc.setFill(Color.RED);
+                    gc.fillRect(invader.getX() - 25, invader.getY() - 25, 50, 25);
+                }
             }
             
             gc.setFill(Color.BLUE);
@@ -241,14 +260,14 @@ public class InvadersGameClient extends Application {
     }
 
     private void gameOver() {
-        score = 0;
+        score -= 100;
         updateRanking(ranking, name, score);
 
         running = false;
     }
 
     private void gameClear(){
-        score = 100;
+        score += 100;
         updateRanking(ranking, name, score);
         clear = 1;
 
