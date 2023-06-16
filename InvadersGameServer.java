@@ -6,15 +6,19 @@ public class InvadersGameServer {
     public static final int PORT = 8080;
 
     public static void main(String[] args) throws IOException {
+        // サーバーの開始
         ServerSocket serverSocket = new ServerSocket(PORT);
         System.out.println("Server started: " + serverSocket);
 
         List<ScoreEntry> scoreList = new ArrayList<>(); // スコアを保存するリスト
 
+        // 複数のクライアントの接続を許可
         while(true) {
+            // クライアントの接続確認
             Socket clientSocket = serverSocket.accept();
             System.out.println("Connection accepted: " + clientSocket);
 
+            // スレッドを用いてクライアントとデータの送受信
             Thread cliThread = new Thread(() -> {
                 try {
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -23,10 +27,12 @@ public class InvadersGameServer {
                 // 名前とスコアの受信
                 String name = in.readLine();
                 System.out.println("Name: " + name);
-                out.println("インベーダーゲーム");
-
+                out.println("インベーダーゲーム"); // ゲーム開始の合図
+                
+                // 保存されているランキングデータの送信
                 sendRankingData(out, scoreList);
                 
+                // 今回のプレイの最高得点の受信
                 int score = Integer.parseInt(in.readLine());
                 System.out.println("Score: " + score);
 
