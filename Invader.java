@@ -1,10 +1,12 @@
 public class Invader {
     private double x;
     private double y;
+    private int health;
 
-    public Invader(double x, double y) {
+    public Invader(double x, double y, int health) {
         this.x = x;
         this.y = y;
+        this.health = health;
     }
 
     public double getX() {
@@ -25,5 +27,13 @@ public class Invader {
 
     public void move(double speed) {
         x += speed;
+    }
+
+    public void hit(int newHealth) {
+        this.health = newHealth;
+    }
+
+    public int getHealth() {
+        return health;
     }
 }

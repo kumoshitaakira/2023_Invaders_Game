@@ -6,14 +6,7 @@ public class InvadersGameServer {
     public static final int PORT = 8080;
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 1) {
-            System.err.println("Usage: InvadersGameServer MachineName");
-            System.exit(1);
-        }
-
-        final int port = Integer.parseInt(args[0]);
-
-        ServerSocket serverSocket = new ServerSocket(port);
+        ServerSocket serverSocket = new ServerSocket(PORT);
         System.out.println("Server started: " + serverSocket);
 
         List<ScoreEntry> scoreList = new ArrayList<>(); // スコアを保存するリスト
