@@ -21,20 +21,27 @@ public class InvadersGameClient extends Application {
     private static final int WIDTH = 800;
     private static final int HEIGHT = 600;
     private static final int INVADER_SPEED = 5;
+    private static final int GAME_CLEAR_DELAY = 10;
 
     private Canvas canvas;
     private GraphicsContext gc;
     private boolean running = true;
     private boolean gameStarted = false;
 
+    private long startTime;
+    private boolean gameClearTriggered = false;
+
     private double playerX;
     private double playerY;
 
     private double invaderX;
     private double invaderY;
+    private boolean invaderDestroyed = false;
 
     private double bulletX = WIDTH * 2;
     private double bulletY = 0;
+
+    private List<Explosion> explosions;
 
     private int clear = 0;
     private static int score;
@@ -102,9 +109,15 @@ public class InvadersGameClient extends Application {
         initializeGame();
         gameStarted = true;
         running = true;
-
+        startTime = System.nanoTime();
         new AnimationTimer() {
+
             public void handle(long currentNanoTime) {
+                long elapsedTime = (currentNanoTime - startTime) / 1_000_000_000; // 経過時間（秒)
+                if (elapsedTime >= GAME_CLEAR_DELAY && !gameClearTriggered) {
+                    gameClearTriggered = true;
+                }
+
                 update();
                 render();
             }
@@ -116,6 +129,9 @@ public class InvadersGameClient extends Application {
         playerY = HEIGHT - 50;
         invaderX = WIDTH / 2;
         invaderY = 50;
+        invaderDestroyed = false;
+        gameClearTriggered = false;
+        explosions = new ArrayList<>();
     }
 
     private void update() {
@@ -123,20 +139,45 @@ public class InvadersGameClient extends Application {
             return;
         }
 
-        invaderX += INVADER_SPEED;
 
-        if (invaderX >= WIDTH) {
-            invaderX = 0;
-            invaderY += 50;
+        if (!invaderDestroyed) {
+            invaderX += INVADER_SPEED;
 
-            if (invaderY >= HEIGHT) {
-                gameOver();
+            if (invaderX >= WIDTH) {
+                invaderX = 0;
+                invaderY += 50;
+
+                if (invaderY >= HEIGHT) {
+                    gameOver();
+                }
             }
         }
-        if (Math.abs(invaderX - bulletX) < 10 && Math.abs(invaderY - bulletY) < 10) {
-            System.out.println((invaderX - bulletX) + "" + (invaderY - bulletY));
-            gameClear();
+        
+        if (checkCollision()) {
+            if (!invaderDestroyed) {
+                createExplosion(invaderX, invaderY);
+                invaderDestroyed = true;
+            }
+            if (gameClearTriggered) {
+                gameClear();
+            }
         }
+
+        if(gameClearTriggered == true && invaderDestroyed == false) gameOver();
+        if(gameClearTriggered == true && invaderDestroyed == true) gameClear();
+
+        if (!gameClearTriggered && ((System.nanoTime() - startTime) / 1_000_000_000) >= GAME_CLEAR_DELAY) {
+            gameClearTriggered = true;
+        }
+    }
+
+    private boolean checkCollision() {
+        double distance = Math.sqrt(Math.pow(invaderX - bulletX, 2) + Math.pow(invaderY - bulletY, 2));
+        return distance < 30; // 衝突判定の閾値を設定
+    }
+
+    private void createExplosion(double x, double y) {
+        explosions.add(new Explosion(x, y));
     }
 
     private void displayRanking() {
@@ -180,12 +221,18 @@ public class InvadersGameClient extends Application {
             gc.setFill(Color.GREEN);
             gc.fillRect(playerX - 25, playerY - 12.5, 50, 25);
 
-            gc.setFill(Color.RED);
-            gc.fillRect(invaderX - 25, invaderY - 25, 50, 25);
-
+            if(!invaderDestroyed) {
+                gc.setFill(Color.RED);
+                gc.fillRect(invaderX - 25, invaderY - 25, 50, 25);
+            }
+            
             gc.setFill(Color.BLUE);
             bulletY = bulletY - 10;
             gc.fillOval(bulletX, bulletY, 50, 20);
+        }
+
+        for (Explosion explosion : explosions) {
+            explosion.draw(gc);
         }
     }
 
@@ -195,16 +242,16 @@ public class InvadersGameClient extends Application {
     }
 
     private void gameOver() {
+        score = 0;
         updateRanking(ranking, name, score);
-        Random random = new Random();
-        score = random.nextInt(101);
+
         running = false;
     }
 
     private void gameClear(){
-        clear = 1;
         score = 100;
         updateRanking(ranking, name, score);
+        clear = 1;
 
         running = false;
     }
