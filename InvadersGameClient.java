@@ -44,6 +44,7 @@ public class InvadersGameClient extends Application {
 
     private int clear = 0;
     private static int score = 0;
+    private static int sendScore = 0;
     private static String name;
     private static List<ScoreEntry> ranking = new ArrayList<>();
     private static boolean newScore = false;
@@ -118,6 +119,7 @@ public class InvadersGameClient extends Application {
     }
 
     private void handleGameOverInput(KeyEvent e, Stage primaryStage) {
+        if(sendScore < score) sendScore = score;
         if (e.getCode() == KeyCode.R) {
             restartGame();
         } else if (e.getCode() == KeyCode.E) {
@@ -384,16 +386,14 @@ public class InvadersGameClient extends Application {
             // ゲーム処理
             game.launch(args);
 
-            if(!restart) {
-                out.println(score);
+            out.println(sendScore);
 
-                String resultUser = in.readLine();
-                System.out.println(resultUser);
-                String  resultScore = in.readLine();
-                System.out.println(resultScore);
+            String resultUser = in.readLine();
+            System.out.println(resultUser);
+            String  resultScore = in.readLine();
+            System.out.println(resultScore);
 
-                out.println("END"); // 終了を示すラベルの送信
-            }
+            out.println("END"); // 終了を示すラベルの送信
 
         } finally {
             System.out.println("Closing...");

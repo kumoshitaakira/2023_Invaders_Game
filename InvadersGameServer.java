@@ -26,7 +26,7 @@ public class InvadersGameServer {
                 out.println("インベーダーゲーム");
 
                 sendRankingData(out, scoreList);
-
+                
                 int score = Integer.parseInt(in.readLine());
                 System.out.println("Score: " + score);
 
