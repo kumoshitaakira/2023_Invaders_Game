@@ -21,41 +21,49 @@ public class InvadersGameServer {
             // スレッドを用いてクライアントとデータの送受信
             Thread cliThread = new Thread(() -> {
                 try {
-                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())), true);
+                    BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                    PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())), true);
 
-                // 名前とスコアの受信
-                String name = in.readLine();
-                System.out.println("Name: " + name);
-                out.println("インベーダーゲーム"); // ゲーム開始の合図
-                
-                // 保存されているランキングデータの送信
-                sendRankingData(out, scoreList);
-                
-                // 今回のプレイの最高得点の受信
-                int score = Integer.parseInt(in.readLine());
-                System.out.println("Score: " + score);
+                    // 名前とスコアの受信
+                    String name = in.readLine();
+                    System.out.println("Name: " + name);
 
-                // ランキングの更新
-                updateScoreList(scoreList, name, score);
+                    // マップのデータをランダムで送信
+                    for(int i = 0; i < 5; i++) {
+                        Random random = new Random();
+                        out.println(random.nextInt(10));
+                    }
 
-                // 受信した名前とスコアをクライアントに送信
-                out.println("Name: " + name);
-                out.println("Score: " + score);
+                    // ゲーム開始の合図
+                    out.println("インベーダーゲーム");
+                    
+                    // 保存されているランキングデータの送信
+                    sendRankingData(out, scoreList);
+                    
+                    // 今回のプレイの最高得点の受信
+                    int score = Integer.parseInt(in.readLine());
+                    System.out.println("Score: " + score);
 
-                out.println("ゲーム終了"); // 終了を示すためのラベル
+                    // ランキングの更新
+                    updateScoreList(scoreList, name, score);
 
-                System.out.println("Data sent to client.");
+                    // 受信した名前とスコアをクライアントに送信
+                    out.println("Name: " + name);
+                    out.println("Score: " + score);
 
-            }catch (IOException ioe) {
-                ioe.printStackTrace();
-            } finally {
-                try {
-                    clientSocket.close();
-                } catch (IOException ioe) {
+                    out.println("ゲーム終了"); // 終了を示すためのラベル
+
+                    System.out.println("Data sent to client.");
+
+                }catch (IOException ioe) {
                     ioe.printStackTrace();
+                } finally {
+                    try {
+                        clientSocket.close();
+                    } catch (IOException ioe) {
+                        ioe.printStackTrace();
+                    }
                 }
-            }
             });
 
             cliThread.start();

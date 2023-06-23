@@ -54,7 +54,10 @@ public class InvadersGameClient extends Application {
     // 取得したスコアと名前と送信用スコアの宣言
     private static int score = 0;
     private static int sendScore = 0;
-    private static String name;
+    private static String name = "null";
+
+    // マップ情報取得用の配列を宣言
+    private static int[] mapData = {0, 0, 0, 0, 0}; 
 
     // ランキング(更新可)のリストとフラグを宣言
     private static List<ScoreEntry> ranking = new ArrayList<>();
@@ -422,6 +425,12 @@ public class InvadersGameClient extends Application {
             // 名前の送信
             out.println(name);
 
+            // マップデータの取得
+            for(int i = 0; i < 5; i++) {
+                mapData[i] = Integer.parseInt(in.readLine());
+                System.out.println(mapData[i]); // 確認用
+            }
+
             //　ゲーム開始可能の合図を受信
             String startMs = in.readLine();
             System.out.println(startMs);
@@ -450,7 +459,7 @@ public class InvadersGameClient extends Application {
             // 今回の最高プレイ結果を出力
             String resultUser = in.readLine();
             System.out.println(resultUser);
-            String  resultScore = in.readLine();
+            String resultScore = in.readLine();
             System.out.println(resultScore);
 
             out.println("END"); // 終了を示すラベルの送信
