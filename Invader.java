@@ -50,25 +50,25 @@ public class Invader {
         return health;
     }
 
-     // 画像を切り替える
+    // 画像を切り替える
     public void updateFrame(GraphicsContext gc) {
-    currentFrame++;
+        currentFrame++;
 
-    if (currentFrame % 6 == (0|1|2)) {
-        alternateImage = !alternateImage;
-    }
-    Image alienImage = new Image("alien.png");
-    double imageWidth = alienImage.getWidth() / 2;
-                    double imageHeight = alienImage.getHeight();
-                    double destWidth = 50;
-                    double destHeight = 25;
-    if(alternateImage){
-    gc.drawImage(alienImage, 0, 0, imageWidth, imageHeight,
-                                getX() - 25, getY() - 25, destWidth, destHeight);
-    }else{
-        gc.drawImage(alienImage, imageWidth, 0, imageWidth, imageHeight,
-                                getX() - 25, getY() - 25, destWidth, destHeight);
-    }
-    
+        if (currentFrame % 6 == (0 | 1 | 2)) {
+            alternateImage = !alternateImage;
+        }
+        Image alienImage = new Image("alien.png");
+        double imageWidth = alienImage.getWidth() / 2;
+        double imageHeight = alienImage.getHeight();
+        double destWidth = 50;
+        double destHeight = 25;
+        if (alternateImage) {
+            gc.drawImage(alienImage, 0, 0, imageWidth, imageHeight,
+                    getX() - 25, getY() - 25, destWidth, destHeight);
+        } else {
+            gc.drawImage(alienImage, imageWidth, 0, imageWidth, imageHeight,
+                    getX() - 25, getY() - 25, destWidth, destHeight);
+        }
+
     }
 }

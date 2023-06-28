@@ -13,7 +13,7 @@ public class InvadersGameServer {
         List<ScoreEntry> scoreList = new ArrayList<>(); // スコアを保存するリスト
 
         // 複数のクライアントの接続を許可
-        while(true) {
+        while (true) {
             // クライアントの接続確認
             Socket clientSocket = serverSocket.accept();
             System.out.println("Connection accepted: " + clientSocket);
@@ -22,24 +22,25 @@ public class InvadersGameServer {
             Thread cliThread = new Thread(() -> {
                 try {
                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                    PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())), true);
+                    PrintWriter out = new PrintWriter(
+                            new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())), true);
 
                     // 名前とスコアの受信
                     String name = in.readLine();
                     System.out.println("Name: " + name);
 
                     // マップのデータをランダムで送信
-                    for(int i = 0; i < 5; i++) {
+                    for (int i = 0; i < 5; i++) {
                         Random random = new Random();
                         out.println(random.nextInt(10));
                     }
 
                     // ゲーム開始の合図
                     out.println("インベーダーゲーム");
-                    
+
                     // 保存されているランキングデータの送信
                     sendRankingData(out, scoreList);
-                    
+
                     // 今回のプレイの最高得点の受信
                     int score = Integer.parseInt(in.readLine());
                     System.out.println("Score: " + score);
@@ -55,7 +56,7 @@ public class InvadersGameServer {
 
                     System.out.println("Data sent to client.");
 
-                }catch (IOException ioe) {
+                } catch (IOException ioe) {
                     ioe.printStackTrace();
                 } finally {
                     try {
@@ -75,7 +76,8 @@ public class InvadersGameServer {
         for (ScoreEntry entry : scoreList) {
             if (entry.getName().equals(name)) {
                 // スコアが新記録なら上書きして終了
-                if(entry.getScore() < score) entry.setScore(score);
+                if (entry.getScore() < score)
+                    entry.setScore(score);
                 return;
             }
         }
@@ -87,7 +89,7 @@ public class InvadersGameServer {
     private static void sendRankingData(PrintWriter out, List<ScoreEntry> scoreList) {
         // スコアを降順にソート
         Collections.sort(scoreList, Collections.reverseOrder());
-        
+
         out.println(scoreList.size());
         // ランキングデータをnameとscoreの二行で送信
         for (int i = 0; i < scoreList.size(); i++) {
