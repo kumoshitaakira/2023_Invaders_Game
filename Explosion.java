@@ -1,5 +1,5 @@
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
+import javafx.scene.image.Image;
 
 public class Explosion {
     private double x;
@@ -7,23 +7,35 @@ public class Explosion {
     private int size;
     private int maxDuration = 60;
     private int duration = 0;
-    
-    // x, y座標と大きさを持ったインスタンを生成
+    private Image explosionImg; // 爆発エフェクトのスプライトシート
+    private int explosionStep = 0; // 爆発のアニメーションフレーム
+
+    private static final int EXPLOSION_W = 128; // 各フレームの幅
+    private static final int EXPLOSION_H = 128; // 各フレームの高さ
+    private static final int EXPLOSION_ROWS = 4; // スプライトシート内のフレームの行数
+    private static final int EXPLOSION_COLS = 4; // スプライトシート内のフレームの列数
+ 
+
     public Explosion(double x, double y) {
         this.x = x;
         this.y = y;
-        this.size = 10;
+        this.size = 100;
+        this.explosionImg = new Image("explosion.png");
     }
 
-    // 爆発エフェクトを描画
     public void draw(GraphicsContext gc) {
         if (duration >= maxDuration) {
             return;
         }
-        gc.setFill(Color.YELLOW);
-        gc.fillOval(x - size / 2, y - size / 2, size, size);
+        
+        int frameX = explosionStep % EXPLOSION_COLS * EXPLOSION_W;
+        int frameY = (explosionStep / EXPLOSION_ROWS) * EXPLOSION_H + 1;
+
+        gc.drawImage(explosionImg, frameX, frameY, EXPLOSION_W, EXPLOSION_H, x - size / 2 , y - size / 2 , size, size);
         // だんだん大きくなる
         size += 2;
         duration++;
+        explosionStep++;
+
     }
 }

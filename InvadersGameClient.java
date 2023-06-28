@@ -10,6 +10,7 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
@@ -346,15 +347,16 @@ public class InvadersGameClient extends Application {
             return;
         } else { // 実行時
             // 自機の描画(緑)
-            gc.setFill(Color.GREEN);
+            Image playerImage = new Image("player.png");
             gc.fillRect(player.getX() - 25, player.getY() - 12.5, 50, 25);
+            gc.drawImage(playerImage, player.getX() - 25, player.getY() - 12.5, 50, 25);
             
-            // 敵機の描画(赤)
+            // 敵機の描画
             for (int i = 0; i < NUM_INVADERS; i++) {
                 if (!invaderDestroyed[i]) {
-                    Invader invader = invaders.get(i);
-                    gc.setFill(Color.RED);
-                    gc.fillRect(invader.getX() - 25, invader.getY() - 25, 50, 25);
+                    Invader invader = invaders.get(i);  
+                    invader.updateFrame(gc);
+                
                 }
             }
             
