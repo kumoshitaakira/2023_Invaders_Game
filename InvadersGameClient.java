@@ -214,7 +214,7 @@ public class InvadersGameClient extends Application {
                 for (int k = 0; k < column; k++) {
                     invaderX = (double) (WIDTH / (row + 1)) * (double) indexX;
                     invaderY = k + 1 + indexY * 40;
-                    invaders.get(i).add(new Invader(IMAGES[i], invaderX, invaderY, (i / 2 + 1)));
+                    invaders.get(i).add(new Invader(IMAGES[i], invaderX, invaderY, (i + 1)));
                     invadersDestroyed.get(i).add(false);
                     indexY++;
                 }
@@ -222,11 +222,13 @@ public class InvadersGameClient extends Application {
             }
         }
 
+        // ボスを宣言
         boss = new Invader("boss.png", 0, 50, 20);
 
         // 爆発エフェクトの宣言
         explosions = new ArrayList<>();
 
+        // 自機の打つ弾を宣言
         bullets = new ArrayList<>();
         for (int i = 0; i < NUM_BULLETS; i++) {
             bullets.add(new Bullet(0, -1000));
@@ -241,20 +243,20 @@ public class InvadersGameClient extends Application {
         }
 
         int currentTIme = (int) ((System.nanoTime() - startTime) / 1_000_000_000);
-        // 各敵機についてフレームごとに敵機を左に動かす
+        // 各敵機についてフレームごとに敵機を下に動かす
         for (int i = 0; i < NUMS_INVADERS.length; i++) {
             for (int j = 0; j < NUMS_INVADERS[i]; j++) {
                 Invader invader = invaders.get(i).get(j);
                 Boolean invaderDestroyed = invadersDestroyed.get(i).get(j);
                 if (currentTIme >= i * 10) {
-                    invader.moveY(INVADER_SPEED_Y);
+                    invader.moveY((i == 4) ? INVADER_SPEED_Y / 2 : INVADER_SPEED_Y);
                     // 一番下まで行ったら強制的に破壊
                     if (invader.getY() >= (HEIGHT - 50)) {
                         invadersDestroyed.get(i).set(j, true);
                     }
                 }
 
-                // 球と敵機が衝突したか判定
+                // 弾と敵機が衝突したか判定
                 for (int k = 0; k < NUM_BULLETS; k++) {
                     Bullet bullet = bullets.get(k);
                     if (checkCollision(invader, bullet)) {
@@ -263,7 +265,7 @@ public class InvadersGameClient extends Application {
                             bullet.hit();// 死んでる敵の当たり判定も残っている
                             // 敵機の体力が0になったら破壊判定をtrueにして、スコアを100追加
                             if (invader.getHealth() <= 0) {
-                                score += 100;
+                                score += 100 * bullet.getamode();
                                 invadersDestroyed.get(i).set(j, true);
                                 break;
                             }
@@ -304,6 +306,7 @@ public class InvadersGameClient extends Application {
             }
         }
 
+        // 弾とボスの衝突判定
         for (int k = 0; k < NUM_BULLETS; k++) {
             Bullet bullet = bullets.get(k);
             if (checkCollision(boss, bullet)) {
@@ -430,7 +433,9 @@ public class InvadersGameClient extends Application {
                 }
             }
 
-            if (!bossDestroyed && currentTIme >= 42) boss.updateFrame(gc);
+            // FinalStageのときにボス表示
+            if (!bossDestroyed && currentTIme >= 42)
+                boss.updateFrame(gc);
 
             // 下部の説明等を表示
             bullets.get(0).showmode(gc);
@@ -444,11 +449,31 @@ public class InvadersGameClient extends Application {
         }
     }
 
+    // 下部の表示するゲーム内の情報を出力
     private void showBottomBar(GraphicsContext gc, int currentTIme, int health) {
+        // 経過時間によってステージの表示を変える
+        String stage = "0";
+        if (currentTIme < 10)
+            stage = "1";
+        else if (currentTIme < 20)
+            stage = "2";
+        else if (currentTIme < 30)
+            stage = "3";
+        else if (currentTIme < 40)
+            stage = "4";
+        else
+            stage = "Final";
+
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
-         gc.fillText(("Name: " + name + "   Time: " + currentTIme + "   Score: " + score + "   Health: " + health), 10, HEIGHT - 30);
-        gc.fillText("↑: up,  ↓: down,  →: right,  ←: left,  Space: shot,  B: change mode,  V: change strength,  E: exit game", 10, HEIGHT - 10);
+        gc.fillText(
+                ("Name: " + name + "   Time: " + currentTIme + "   Stage: " + stage + "   Score: " + score
+                        + "   Health: " + health),
+                10,
+                HEIGHT - 30);
+        gc.fillText(
+                "↑: up,  ↓: down,  →: right,  ←: left,  Space: shot,  B: change mode,  V: change strength,  E: exit game",
+                10, HEIGHT - 10);
     }
 
     // ゲームオーバ時の処理

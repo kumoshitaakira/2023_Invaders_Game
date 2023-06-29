@@ -10,7 +10,7 @@ public class Invader {
     private String imageName;
 
     // x、y座標と体力・使用画像の舐めを持ったインスタンスを生成
-    public Invader(String imageName,double x, double y, int health) {
+    public Invader(String imageName, double x, double y, int health) {
         this.imageName = imageName;
         this.x = x;
         this.y = y;

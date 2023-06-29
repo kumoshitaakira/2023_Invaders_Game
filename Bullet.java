@@ -44,23 +44,27 @@ public class Bullet {
                 this.range = 100;
                 break;
             case 2:
-                this.speed = 30;  // 1
+                this.speed = 30; // 1
                 this.range = 700;
                 break;
         }
         this.damage = this.damage / this.speed;
         switch (amode % 3) {
             case 0:
-                this.pier = 5;
+                this.pier = 4;
                 break;
             case 1:
-                this.pier = 3;
+                this.pier = 2;
                 break;
             case 2:
                 this.pier = 1;
                 break;
         }
         this.x = bulletx;
+    }
+
+    public int getamode() {
+        return (amode % 3 + 1);
     }
 
     public void setY(double bullety) {
