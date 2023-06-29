@@ -436,7 +436,7 @@ public class InvadersGameClient extends Application {
             // FinalStageのときにボス表示
             if (!bossDestroyed && currentTIme >= 42) {
                 gc.setFill(Color.RED);
-                gc.fillText("Boss Health: ", WIDTH / 2 - 300, 15);
+                gc.fillText("Boss Health", WIDTH / 2 - 300, 15);
                 gc.fillRect(WIDTH / 2 - 180, 5, boss.getHealth() * 20, 15);
                 boss.updateFrame(gc);
             }
