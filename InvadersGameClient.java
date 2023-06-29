@@ -122,10 +122,10 @@ public class InvadersGameClient extends Application {
             player.setY(player.getY() + (PLAYER_SPEED - 5));
         } else if (e.getCode() == KeyCode.B) {
             bullets.get(0).changemode();
-
         } else if (e.getCode() == KeyCode.V) {
             bullets.get(0).changeammo();
-
+        } else if (e.getCode() == KeyCode.E) {
+            gameOver();
         }
 
         // 枠外に行かないようにする
@@ -136,8 +136,8 @@ public class InvadersGameClient extends Application {
         }
         if (player.getY() < 50) {
             player.setY(50);
-        } else if (player.getY() > HEIGHT - 50) {
-            player.setY(HEIGHT - 50);
+        } else if (player.getY() > HEIGHT - 60) {
+            player.setY(HEIGHT - 60);
         }
     }
 
@@ -196,7 +196,7 @@ public class InvadersGameClient extends Application {
         clear = 0;
 
         // 自機の宣言
-        player = new Invader("player.png", (WIDTH / 2), (HEIGHT - 50), 20);
+        player = new Invader("player.png", (WIDTH / 2), (HEIGHT - 60), 50);
 
         // 敵機の宣言
         invaders = new ArrayList<>();
@@ -336,7 +336,7 @@ public class InvadersGameClient extends Application {
     private boolean damaged(Invader invader) {
         double distance = Math
                 .sqrt(Math.pow(player.getX() - invader.getX(), 2) + Math.pow(player.getY() - invader.getY(), 2));
-        if (distance < 10) { // 衝突判定の閾値を設定
+        if (distance < 15) { // 衝突判定の閾値を設定
             player.hit(player.getHealth() - 1); // 体力を1減らす
             return true;
         }
@@ -401,7 +401,7 @@ public class InvadersGameClient extends Application {
 
             // 終了かリスタートをするかの案内の表示
             gc.setFont(Font.font("Verdana", FontWeight.BOLD, 20));
-            gc.fillText("Press E to exit    Press R to restart", WIDTH / 2 - 120, HEIGHT / 2 + 160);
+            gc.fillText("Press E to exit    Press R to restart", WIDTH / 2 - 180, HEIGHT / 2 + 140);
             return;
         } else { // 実行時
             // 球の描画(青)
@@ -431,13 +431,14 @@ public class InvadersGameClient extends Application {
             }
 
             if (!bossDestroyed && currentTIme >= 42) {
-                Image bossImage = new Image("player.png");
+                Image bossImage = new Image("boss.png");
                 gc.fillRect(boss.getX() - 25, boss.getY() - 12.5, 50, 25);
                 gc.drawImage(bossImage, boss.getX() - 25, boss.getY() - 12.5, 50, 25);
             }
 
-            // モードの表示
+            // 下部の説明等を表示
             bullets.get(0).showmode(gc);
+            showBottomBar(gc, currentTIme, score, player.getHealth());
 
         }
 
@@ -445,6 +446,13 @@ public class InvadersGameClient extends Application {
         for (Explosion explosion : explosions) {
             explosion.draw(gc);
         }
+    }
+
+    private void showBottomBar(GraphicsContext gc, int currentTIme, int score, int health) {
+        gc.setFill(Color.WHITE);
+        gc.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
+        gc.fillText(("Time: " + currentTIme + "  Score: " + score + "  Health: " + health), 10, HEIGHT - 30);
+        gc.fillText("↑: up,  ↓: down,  →: right,  ←: left,  Space: shot,  B: change mode,  V: change strength,  E: exit game", 10, HEIGHT - 10);
     }
 
     // ゲームオーバ時の処理

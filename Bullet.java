@@ -99,34 +99,34 @@ public class Bullet {
             case 0:
                 gc.setFill(Color.WHITE);
                 gc.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
-                gc.fillText("Assault", WIDTH - 50, HEIGHT - 10);
+                gc.fillText("Assault", WIDTH - 60, HEIGHT - 30);
                 break;
             case 1:
                 gc.setFill(Color.WHITE);
                 gc.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
-                gc.fillText("Shoot", WIDTH - 50, HEIGHT - 10);
+                gc.fillText("Shoot", WIDTH - 60, HEIGHT - 30);
                 break;
             case 2:
                 gc.setFill(Color.WHITE);
                 gc.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
-                gc.fillText("Snipe", WIDTH - 50, HEIGHT - 10);
+                gc.fillText("Snipe", WIDTH - 60, HEIGHT - 30);
                 break;
         }
         switch (amode % 3) {
             case 0:
                 gc.setFill(Color.WHITE);
                 gc.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
-                gc.fillText("AP", WIDTH - 100, HEIGHT - 10);
+                gc.fillText("AP", WIDTH - 110, HEIGHT - 30);
                 break;
             case 1:
                 gc.setFill(Color.WHITE);
                 gc.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
-                gc.fillText("BP", WIDTH - 100, HEIGHT - 10);
+                gc.fillText("BP", WIDTH - 110, HEIGHT - 30);
                 break;
             case 2:
                 gc.setFill(Color.WHITE);
                 gc.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
-                gc.fillText("FMJ", WIDTH - 100, HEIGHT - 10);
+                gc.fillText("FMJ", WIDTH - 110, HEIGHT - 30);
                 break;
         }
     }
