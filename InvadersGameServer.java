@@ -32,7 +32,7 @@ public class InvadersGameServer {
                     // マップのデータをランダムで送信
                     for (int i = 0; i < 5; i++) {
                         Random random = new Random();
-                        out.println(random.nextInt(10));
+                        out.println(random.nextInt(10) + 1);
                     }
 
                     // ゲーム開始の合図

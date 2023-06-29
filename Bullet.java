@@ -10,7 +10,7 @@ public class Bullet {
     private int speed = 10;// 弾の速さ
     private static int bmode = 0, amode = 0;// 発射モード
     private int pier = 2;// 貫通力、この回数だけヒットしたら弾が消える
-    private int damage = 2;// ダメージ量、敵の体力とのバランスを考慮する必要がある
+    private int damage = 30;// ダメージ量、敵の体力とのバランスを考慮する必要がある
     private int range = 1000;
 
     // SPACEを押したら実行する
@@ -29,26 +29,26 @@ public class Bullet {
     }
 
     public int getdamage() {
-        return this.damage;
+        return (this.damage <= 0) ? 1 : this.damage;
     }
 
     // spaceが押されると、呼び出される。弾を発射位置に動かすとともに、弾の性能を決める
     public void setX(double bulletx) {
         switch (bmode % 3) {
             case 0:
-                this.speed = 15;
+                this.speed = 15; // 2
                 this.range = 300;
                 break;
             case 1:
-                this.speed = 5;
+                this.speed = 5; // 4
                 this.range = 100;
                 break;
             case 2:
-                this.speed = 30;
+                this.speed = 30;  // 1
                 this.range = 700;
                 break;
         }
-        this.damage = 1 / this.speed * this.range;
+        this.damage = this.damage / this.speed;
         switch (amode % 3) {
             case 0:
                 this.pier = 5;

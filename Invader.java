@@ -36,8 +36,13 @@ public class Invader {
     }
 
     // x座標を右に動かすメソッド
-    public void move(double speed) {
+    public void moveX(double speed) {
         x += speed;
+    }
+
+    // y座標を下に動かすメソッド
+    public void moveY(double speed) {
+        y += speed;
     }
 
     // 衝突時の体力の更新
