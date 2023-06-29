@@ -27,6 +27,8 @@ public class InvadersGameClient extends Application {
     private static final int PLAYER_SPEED = 20;
     private static final int[] NUMS_INVADERS = { 6, 10, 20, 30, 40 };
     private static final int NUM_BULLETS = 100;
+    private static final String[] IMAGES = { "alien.png", "alien_blue.png", "alien_green.png", "alien_orange.png",
+            "alien_yellow.png" };
 
     // 描画に関わるものの宣言
     private Canvas canvas;
@@ -194,7 +196,7 @@ public class InvadersGameClient extends Application {
         clear = 0;
 
         // 自機の宣言
-        player = new Invader((WIDTH / 2), (HEIGHT - 50), 100);
+        player = new Invader("player.png", (WIDTH / 2), (HEIGHT - 50), 20);
 
         // 敵機の宣言
         invaders = new ArrayList<>();
@@ -211,16 +213,16 @@ public class InvadersGameClient extends Application {
                 int indexY = 1;
                 for (int k = 0; k < column; k++) {
                     invaderX = (double) (WIDTH / (row + 1)) * (double) indexX;
-                    invaderY = k + 1 + indexY * 45;
-                    invaders.get(i).add(new Invader(invaderX, invaderY, (i / 2 + 1)));
+                    invaderY = k + 1 + indexY * 40;
+                    invaders.get(i).add(new Invader(IMAGES[i], invaderX, invaderY, (i / 2 + 1)));
                     invadersDestroyed.get(i).add(false);
                     indexY++;
                 }
                 indexX++;
             }
         }
-        
-        boss = new Invader(0, HEIGHT - 500, 20);
+
+        boss = new Invader("boss.png", 0, 50, 20);
 
         // 爆発エフェクトの宣言
         explosions = new ArrayList<>();
@@ -237,7 +239,7 @@ public class InvadersGameClient extends Application {
         if (!running) {
             return;
         }
-        
+
         int currentTIme = (int) ((System.nanoTime() - startTime) / 1_000_000_000);
         // 各敵機についてフレームごとに敵機を左に動かす
         for (int i = 0; i < NUMS_INVADERS.length; i++) {
@@ -272,7 +274,7 @@ public class InvadersGameClient extends Application {
 
                 // 自機と敵機の衝突判定
                 if (!invaderDestroyed) {
-                    if(damaged(invader)) {
+                    if (damaged(invader)) {
                         createExplosion(player.getX(), player.getY()); // 爆発エフェクトを出す
                         // 自機の体力が0になったらゲームオーバー
                         if (player.getHealth() == 0) {
@@ -285,7 +287,7 @@ public class InvadersGameClient extends Application {
         }
 
         // ボスの動き
-        if (!bossDestroyed && currentTIme >= 45) {
+        if (!bossDestroyed && currentTIme >= 42) {
             // 左端に行ったら折り返す
             if (boss.getX() >= WIDTH) {
                 boss.moveX(-INVADER_SPEED_X / 2);
@@ -428,7 +430,7 @@ public class InvadersGameClient extends Application {
                 }
             }
 
-            if (!bossDestroyed && currentTIme >= 45) {
+            if (!bossDestroyed && currentTIme >= 42) {
                 Image bossImage = new Image("player.png");
                 gc.fillRect(boss.getX() - 25, boss.getY() - 12.5, 50, 25);
                 gc.drawImage(bossImage, boss.getX() - 25, boss.getY() - 12.5, 50, 25);
@@ -455,7 +457,7 @@ public class InvadersGameClient extends Application {
 
     // ゲームクリア時の処理
     private void gameClear() {
-        score += 1000;
+        score = score + 1000 - (int) ((System.nanoTime() - startTime) / 1_000_000_000);
         updateRanking(ranking, name, score);
         clear = 1;
 
