@@ -430,15 +430,11 @@ public class InvadersGameClient extends Application {
                 }
             }
 
-            if (!bossDestroyed && currentTIme >= 42) {
-                Image bossImage = new Image("boss.png");
-                gc.fillRect(boss.getX() - 25, boss.getY() - 12.5, 50, 25);
-                gc.drawImage(bossImage, boss.getX() - 25, boss.getY() - 12.5, 50, 25);
-            }
+            if (!bossDestroyed && currentTIme >= 42) boss.updateFrame(gc);
 
             // 下部の説明等を表示
             bullets.get(0).showmode(gc);
-            showBottomBar(gc, currentTIme, score, player.getHealth());
+            showBottomBar(gc, currentTIme, player.getHealth());
 
         }
 
@@ -448,10 +444,10 @@ public class InvadersGameClient extends Application {
         }
     }
 
-    private void showBottomBar(GraphicsContext gc, int currentTIme, int score, int health) {
+    private void showBottomBar(GraphicsContext gc, int currentTIme, int health) {
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
-        gc.fillText(("Time: " + currentTIme + "  Score: " + score + "  Health: " + health), 10, HEIGHT - 30);
+         gc.fillText(("Name: " + name + "   Time: " + currentTIme + "   Score: " + score + "   Health: " + health), 10, HEIGHT - 30);
         gc.fillText("↑: up,  ↓: down,  →: right,  ←: left,  Space: shot,  B: change mode,  V: change strength,  E: exit game", 10, HEIGHT - 10);
     }
 
@@ -465,7 +461,7 @@ public class InvadersGameClient extends Application {
 
     // ゲームクリア時の処理
     private void gameClear() {
-        score = score + 1000 - (int) ((System.nanoTime() - startTime) / 1_000_000_000);
+        score = score + 1000 - (int) ((System.nanoTime() - startTime) / 1_000_000_000) * 10;
         updateRanking(ranking, name, score);
         clear = 1;
 
@@ -508,7 +504,6 @@ public class InvadersGameClient extends Application {
             // マップデータの取得
             for (int i = 0; i < 5; i++) {
                 rawMapData[i] = Integer.parseInt(in.readLine());
-                System.out.println(rawMapData[i]); // 確認用
             }
 
             // ゲーム開始可能の合図を受信

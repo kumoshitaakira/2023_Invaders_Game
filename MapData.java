@@ -21,7 +21,7 @@ public class MapData {
         }
     }
     
-    // 1*6 か 2*3 の選択
+    // 1 * 6 か 2 * 3 の選択
     int getStage1() {
         switch(mapData[0] / 5) {
             case 0:
