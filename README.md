@@ -2,8 +2,6 @@
 
 以下の手順で実行できる。
 1. vscodeのReferenceに`Javafxのlib/ファイル.jar`を全部入れる
-2. `javac ScoreEntry.java`
-3. `java ScoreEntry`
 4. `javac InvadersGameServer.java`
 5. `java InvadersGameServer`\
 **<Mac版>**
