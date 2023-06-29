@@ -3,13 +3,13 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
@@ -22,9 +22,11 @@ public class InvadersGameClient extends Application {
     // 各種定数の宣言
     private static final int WIDTH = 800;
     private static final int HEIGHT = 600;
-    private static final int INVADER_SPEED = 4;
-    private static final int GAME_CLEAR_DELAY = 10;
-    private static final int NUM_INVADERS = 20;
+    private static final int INVADER_SPEED_X = 4;
+    private static final double INVADER_SPEED_Y = 0.4;
+    private static final int PLAYER_SPEED = 20;
+    private static final int[] NUMS_INVADERS = { 6, 10, 20, 30, 40 };
+    private static final int NUM_BULLETS = 100;
 
     // 描画に関わるものの宣言
     private Canvas canvas;
@@ -36,25 +38,33 @@ public class InvadersGameClient extends Application {
 
     // ゲームの終了に用いる変数とフラグの宣言
     private long startTime;
-    private boolean gameClearTriggered = false;
 
-    // 自機１つ・敵機複数(破壊判定付き)・球1つの宣言
+    // 自機１つ・ステージ1~5の敵機複数とボス敵機(破壊判定付き)
     private Invader player;
-    private List<Invader> invaders;
-    private boolean[] invaderDestroyed;
-    private double bulletX = WIDTH * 2;
-    private double bulletY = 0;
+    private List<List<Invader>> invaders;
+    private List<List<Boolean>> invadersDestroyed;
+    private Invader boss;
+    private boolean bossDestroyed;
+    private int bossdirection; // ボスの移動方向
 
     // 爆発のエフェクト用リストの宣言
     private List<Explosion> explosions;
 
+    // 弾
+    private List<Bullet> bullets;
+    private static int bulletnumber = 0;
+
     // クリア判定用の整数を宣言
     private int clear = 0;
-    
+
     // 取得したスコアと名前と送信用スコアの宣言
     private static int score = 0;
     private static int sendScore = 0;
-    private static String name;
+    private static String name = "null";
+
+    // マップ情報取得用の配列を宣言
+    private static int[] rawMapData = { 0, 0, 0, 0, 0 };
+    private static MapData mapData;
 
     // ランキング(更新可)のリストとフラグを宣言
     private static List<ScoreEntry> ranking = new ArrayList<>();
@@ -76,7 +86,7 @@ public class InvadersGameClient extends Application {
         scene.setOnKeyPressed(e -> {
             if (!gameStarted && e.getCode() == KeyCode.SPACE) {
                 startGame();
-            } else if(running) {
+            } else if (running) {
                 handleGameInput(e);
             } else if (!running) {
                 handleGameOverInput(e, primaryStage);
@@ -89,40 +99,50 @@ public class InvadersGameClient extends Application {
         primaryStage.setResizable(false);
         primaryStage.show();
 
-        //最初のスタート画面
+        // 最初のスタート画面
         renderStartScreen();
     }
 
     // ゲームプレイ時のキーボド設定
     private void handleGameInput(KeyEvent e) {
         if (e.getCode() == KeyCode.LEFT) {
-            player.setX(player.getX() - 10);
+            player.setX(player.getX() - PLAYER_SPEED);
         } else if (e.getCode() == KeyCode.RIGHT) {
-            player.setX(player.getX() + 10);
+            player.setX(player.getX() + PLAYER_SPEED);
         } else if (e.getCode() == KeyCode.SPACE) {
-            shoot();
+            Bullet newbullet = bullets.get(bulletnumber % NUM_BULLETS);
+            newbullet.setX(player.getX());
+            newbullet.setY(player.getY());
+            bulletnumber++;
         } else if (e.getCode() == KeyCode.UP) {
-            player.setY(player.getY() - 10);
+            player.setY(player.getY() - (PLAYER_SPEED - 5));
         } else if (e.getCode() == KeyCode.DOWN) {
-            player.setY(player.getY() + 10);
+            player.setY(player.getY() + (PLAYER_SPEED - 5));
+        } else if (e.getCode() == KeyCode.B) {
+            bullets.get(0).changemode();
+
+        } else if (e.getCode() == KeyCode.V) {
+            bullets.get(0).changeammo();
+
         }
 
         // 枠外に行かないようにする
-        if (player.getX() < 0) {
-            player.setX(0);
-        } else if (player.getX() > WIDTH) {
-            player.setX(WIDTH);
+        if (player.getX() < 20) {
+            player.setX(20);
+        } else if (player.getX() > WIDTH - 20) {
+            player.setX(WIDTH - 20);
         }
-        if (player.getY() < 0) {
-            player.setY(0);
-        } else if (player.getY() > HEIGHT) {
-            player.setY(HEIGHT);
+        if (player.getY() < 50) {
+            player.setY(50);
+        } else if (player.getY() > HEIGHT - 50) {
+            player.setY(HEIGHT - 50);
         }
     }
 
     // ゲーム終了時のキーボード設定
     private void handleGameOverInput(KeyEvent e, Stage primaryStage) {
-        if(sendScore < score) sendScore = score;
+        if (sendScore < score)
+            sendScore = score;
         if (e.getCode() == KeyCode.R) {
             restartGame();
         } else if (e.getCode() == KeyCode.E) {
@@ -150,21 +170,15 @@ public class InvadersGameClient extends Application {
     // ゲームの実行メソッド
     private void startGame() {
         // 初期化
+        mapData = new MapData(rawMapData);
         initializeGame();
         gameStarted = true;
         running = true;
         startTime = System.nanoTime();
-        
+
         // ゲーム内のアニメーションスタート
         gameLoop = new AnimationTimer() {
-
             public void handle(long currentNanoTime) {
-                // 経過時間の計測 --ボスが実装できたらここは消す予定
-                long elapsedTime = (currentNanoTime - startTime) / 1_000_000_000; // 経過時間（秒)
-                if (elapsedTime >= GAME_CLEAR_DELAY && !gameClearTriggered) {
-                    gameClearTriggered = true;
-                }
-
                 update();
                 render();
             }
@@ -179,31 +193,42 @@ public class InvadersGameClient extends Application {
         // クリア判定の初期化
         clear = 0;
 
-        // 球の座標初期化
-        bulletX = WIDTH * 2;
-        bulletY = 0;
-
         // 自機の宣言
-        player = new Invader((WIDTH / 2), (HEIGHT - 50), 20);
+        player = new Invader((WIDTH / 2), (HEIGHT - 50), 100);
 
         // 敵機の宣言
         invaders = new ArrayList<>();
-        invaderDestroyed = new boolean[NUM_INVADERS];
-        // 今は座標をランダムにしているが、今後の実装ではパターン化させる予定
-        for (int i = 0; i < NUM_INVADERS; i++) {
-            Random random = new Random();
-            double invaderX = WIDTH / 2 + ((i % 10) - NUM_INVADERS / 2) * random.nextInt(51);
-            random = new Random();
-            double invaderY = ((i % 10) + 1) * random.nextInt(10) * 10 + NUM_INVADERS;
-            invaders.add(new Invader(invaderX, invaderY, 3));
-            invaderDestroyed[i] = false;
+        invadersDestroyed = new ArrayList<>();
+        for (int i = 0; i < NUMS_INVADERS.length; i++) {
+            invaders.add(new ArrayList<Invader>());
+            invadersDestroyed.add(new ArrayList<Boolean>());
+            int column = mapData.getStageData(i);
+            int row = NUMS_INVADERS[i] / column;
+            int indexX = 1;
+            for (int j = 0; j < row; j++) {
+                double invaderX = 0.0;
+                double invaderY = 0.0;
+                int indexY = 1;
+                for (int k = 0; k < column; k++) {
+                    invaderX = (double) (WIDTH / (row + 1)) * (double) indexX;
+                    invaderY = k + 1 + indexY * 45;
+                    invaders.get(i).add(new Invader(invaderX, invaderY, (i / 2 + 1)));
+                    invadersDestroyed.get(i).add(false);
+                    indexY++;
+                }
+                indexX++;
+            }
         }
-
-        // ゲームクリアのトリガーの初期化
-        gameClearTriggered = false;
+        
+        boss = new Invader(0, HEIGHT - 500, 20);
 
         // 爆発エフェクトの宣言
         explosions = new ArrayList<>();
+
+        bullets = new ArrayList<>();
+        for (int i = 0; i < NUM_BULLETS; i++) {
+            bullets.add(new Bullet(0, -1000));
+        }
     }
 
     // ゲーム中の各オブジェクトの座標の更新
@@ -212,64 +237,94 @@ public class InvadersGameClient extends Application {
         if (!running) {
             return;
         }
-
+        
+        int currentTIme = (int) ((System.nanoTime() - startTime) / 1_000_000_000);
         // 各敵機についてフレームごとに敵機を左に動かす
-        for (int i = 0; i < NUM_INVADERS; i++) {
-            Invader invader = invaders.get(i);
-            if (!invaderDestroyed[i]) {
-                invader.move(INVADER_SPEED);
-                // 左端に行ったら一段下げて右端から再スタート
-                if (invader.getX() >= WIDTH) {
-                    invader.setX(0);
-                    invader.setY(invader.getY() + 50);
-                    // 一番下まで行ったら上に戻す
-                    if (invader.getY() >= HEIGHT) {
-                        invader.setY(0);
+        for (int i = 0; i < NUMS_INVADERS.length; i++) {
+            for (int j = 0; j < NUMS_INVADERS[i]; j++) {
+                Invader invader = invaders.get(i).get(j);
+                Boolean invaderDestroyed = invadersDestroyed.get(i).get(j);
+                if (currentTIme >= i * 10) {
+                    invader.moveY(INVADER_SPEED_Y);
+                    // 一番下まで行ったら強制的に破壊
+                    if (invader.getY() >= (HEIGHT - 50)) {
+                        invadersDestroyed.get(i).set(j, true);
                     }
                 }
-            }
 
-            // 球と敵機が衝突したか判定
-            if (checkCollision(invader)) {
-                if (!invaderDestroyed[i]) {
-                    createExplosion(invader.getX(), invader.getY()); // 爆発エフェクトを出す
-                    // 敵機の体力が0になったら破壊判定をtrueにして、スコアを100追加
-                    if(invader.getHealth() == 0) {
-                        score += 100;
-                        invaderDestroyed[i] = true;
+                // 球と敵機が衝突したか判定
+                for (int k = 0; k < NUM_BULLETS; k++) {
+                    Bullet bullet = bullets.get(k);
+                    if (checkCollision(invader, bullet)) {
+                        if (!invaderDestroyed && currentTIme >= i * 10) {
+                            createExplosion(invader.getX(), invader.getY()); // 爆発エフェクトを出す
+                            bullet.hit();// 死んでる敵の当たり判定も残っている
+                            // 敵機の体力が0になったら破壊判定をtrueにして、スコアを100追加
+                            if (invader.getHealth() <= 0) {
+                                score += 100;
+                                invadersDestroyed.get(i).set(j, true);
+                                break;
+                            }
+                            break;
+                        }
                     }
                 }
-                // ゲームクリアならクリア画面へ
-                if (gameClearTriggered) {
-                    gameClear();
-                }
-            }
 
-            // 自機と敵機の衝突判定
-            if(damaged(invader)) {
-                createExplosion(player.getX(), player.getY()); // 爆発エフェクトを出す
-                // 自機の体力が0になったらゲームオーバー
-                if(player.getHealth() == 0) {
-                    gameOver();
-                    break;
+                // 自機と敵機の衝突判定
+                if (!invaderDestroyed) {
+                    if(damaged(invader)) {
+                        createExplosion(player.getX(), player.getY()); // 爆発エフェクトを出す
+                        // 自機の体力が0になったらゲームオーバー
+                        if (player.getHealth() == 0) {
+                            gameOver();
+                            break;
+                        }
+                    }
                 }
             }
         }
 
-        // ゲームクリアならクリア画面へ
-        if(gameClearTriggered) gameClear();
+        // ボスの動き
+        if (!bossDestroyed && currentTIme >= 45) {
+            // 左端に行ったら折り返す
+            if (boss.getX() >= WIDTH) {
+                boss.moveX(-INVADER_SPEED_X / 2);
+                bossdirection = -1;
+            }
+            // 右端に行ったら折り返す
+            else if (boss.getX() <= 0) {
+                boss.moveX(INVADER_SPEED_X / 2);
+                bossdirection = 1;
+            }
+            // それ以外は直前の動きに依存
+            else {
+                boss.moveX(INVADER_SPEED_X * bossdirection / 2);
+            }
+        }
 
-        // ゲーム進行中、制限時間に達したらゲームクリアへ
-        if (!gameClearTriggered && ((System.nanoTime() - startTime) / 1_000_000_000) >= GAME_CLEAR_DELAY) {
-            gameClearTriggered = true;
+        for (int k = 0; k < NUM_BULLETS; k++) {
+            Bullet bullet = bullets.get(k);
+            if (checkCollision(boss, bullet)) {
+                if (!bossDestroyed) {
+                    createExplosion(boss.getX(), boss.getY()); // 爆発エフェクトを出す
+                    bullet.hit();// 死んでる敵の当たり判定も残っている
+                    // 敵機の体力が0になったら破壊判定をtrueにして、スコアを100追加
+                    if (boss.getHealth() <= 0) {
+                        score += 500;
+                        bossDestroyed = true;
+                        gameClear();
+                    }
+                }
+            }
         }
     }
 
     // 球と敵機の衝突メソッド
-    private boolean checkCollision(Invader invader) {
-        double distance = Math.sqrt(Math.pow(invader.getX() - bulletX, 2) + Math.pow(invader.getY() - bulletY, 2));
-        if (distance < 30) {  // 衝突判定の閾値を設定
-            invader.hit(invader.getHealth() - 1);  // 体力を1減らす
+    private boolean checkCollision(Invader invader, Bullet bullet) {
+        double distance = Math
+                .sqrt(Math.pow(invader.getX() - bullet.getX(), 2) + Math.pow(invader.getY() - bullet.getY(), 2));
+        if (distance < 30) { // 衝突判定の閾値を設定
+            invader.hit(invader.getHealth() - bullet.getdamage()); // 体力を1減らす
             return true;
         }
         return false;
@@ -277,9 +332,10 @@ public class InvadersGameClient extends Application {
 
     // 自機と敵機の衝突メソッド
     private boolean damaged(Invader invader) {
-        double distance = Math.sqrt(Math.pow(player.getX() - invader.getX(), 2) + Math.pow(player.getY() - invader.getY(), 2));
-        if (distance < 10) {  // 衝突判定の閾値を設定
-            player.hit(player.getHealth() - 1);  // 体力を1減らす
+        double distance = Math
+                .sqrt(Math.pow(player.getX() - invader.getX(), 2) + Math.pow(player.getY() - invader.getY(), 2));
+        if (distance < 10) { // 衝突判定の閾値を設定
+            player.hit(player.getHealth() - 1); // 体力を1減らす
             return true;
         }
         return false;
@@ -295,20 +351,24 @@ public class InvadersGameClient extends Application {
         Collections.sort(ranking, Collections.reverseOrder());
         gc.fillText("----- Ranking -----", WIDTH / 2 - 130, HEIGHT / 2 - 120);
         int i = 0;
-        for(i = 0; i < ranking.size(); i++) {
-            if(i >= 5) break; // とりあえず上位5くらいまで
+        for (i = 0; i < ranking.size(); i++) {
+            if (i >= 5)
+                break; // とりあえず上位5くらいまで
             ScoreEntry entry = ranking.get(i);
-            if(entry.getName().equals(name)) {
-                if(newScore) {
+            if (entry.getName().equals(name)) {
+                if (newScore) {
                     // 新記録ならnew
-                    gc.fillText("new " + (i + 1) + ". " + entry.getName() + " " + entry.getScore(), WIDTH / 2 - 110, HEIGHT / 2 - 80 + i * 40);
+                    gc.fillText("new " + (i + 1) + ". " + entry.getName() + " " + entry.getScore(), WIDTH / 2 - 110,
+                            HEIGHT / 2 - 80 + i * 40);
                 } else {
                     // 記録更新してないなら、プレイヤーの最高得点を表示
-                    gc.fillText("-> " + (i + 1) + ". " + entry.getName() + " " + entry.getScore(), WIDTH / 2 - 110, HEIGHT / 2 - 80 + i * 40);
+                    gc.fillText("-> " + (i + 1) + ". " + entry.getName() + " " + entry.getScore(), WIDTH / 2 - 110,
+                            HEIGHT / 2 - 80 + i * 40);
                 }
             } else {
                 // プレイヤー以外の得点
-                gc.fillText((i + 1) + ". " + entry.getName() + " " + entry.getScore(), WIDTH / 2 - 110, HEIGHT / 2 - 80 + i * 40);
+                gc.fillText((i + 1) + ". " + entry.getName() + " " + entry.getScore(), WIDTH / 2 - 110,
+                        HEIGHT / 2 - 80 + i * 40);
             }
         }
         gc.fillText("--------------------", WIDTH / 2 - 130, HEIGHT / 2 - 80 + i * 40);
@@ -324,7 +384,7 @@ public class InvadersGameClient extends Application {
             gc.setFont(Font.font("Verdana", FontWeight.BOLD, 48));
 
             // クリアかゲームオーバーかの結果を表示
-            if (clear == 1){
+            if (clear == 1) {
                 gc.fillText("Game Clear", WIDTH / 2 - 150, HEIGHT / 2 - 200);
             } else {
                 gc.fillText("Game Over", WIDTH / 2 - 150, HEIGHT / 2 - 200);
@@ -333,7 +393,7 @@ public class InvadersGameClient extends Application {
             // プレイ結果の名前とスコアを表示
             gc.setFont(Font.font("Verdana", FontWeight.BOLD, 24));
             gc.fillText("Name: " + name + "  Score: " + score, WIDTH / 2 - 150, HEIGHT / 2 - 160);
-            
+
             // ランキングの表示
             displayRanking();
 
@@ -342,23 +402,41 @@ public class InvadersGameClient extends Application {
             gc.fillText("Press E to exit    Press R to restart", WIDTH / 2 - 120, HEIGHT / 2 + 160);
             return;
         } else { // 実行時
+            // 球の描画(青)
+            for (Bullet bullet : bullets) {
+                bullet.draw(gc);
+            }
+
             // 自機の描画(緑)
-            gc.setFill(Color.GREEN);
+            Image playerImage = new Image("player.png");
             gc.fillRect(player.getX() - 25, player.getY() - 12.5, 50, 25);
-            
-            // 敵機の描画(赤)
-            for (int i = 0; i < NUM_INVADERS; i++) {
-                if (!invaderDestroyed[i]) {
-                    Invader invader = invaders.get(i);
-                    gc.setFill(Color.RED);
-                    gc.fillRect(invader.getX() - 25, invader.getY() - 25, 50, 25);
+            gc.drawImage(playerImage, player.getX() - 25, player.getY() - 12.5, 50, 25);
+
+            // 敵機の描画
+            int currentTIme = (int) ((System.nanoTime() - startTime) / 1_000_000_000);
+            for (int i = 0; i < NUMS_INVADERS.length; i++) {
+                if (currentTIme >= i * 10) {
+                    List<Invader> invaderList = invaders.get(i);
+                    List<Boolean> booleanList = invadersDestroyed.get(i);
+                    for (int j = 0; j < NUMS_INVADERS[i]; j++) {
+                        Boolean invaderDestroyed = booleanList.get(j);
+                        if (!invaderDestroyed) {
+                            Invader invader = invaderList.get(j);
+                            invader.updateFrame(gc);
+                        }
+                    }
                 }
             }
-            
-            // 球の描画(青)
-            gc.setFill(Color.BLUE);
-            bulletY = bulletY - 10;
-            gc.fillOval(bulletX, bulletY, 50, 20);
+
+            if (!bossDestroyed && currentTIme >= 45) {
+                Image bossImage = new Image("player.png");
+                gc.fillRect(boss.getX() - 25, boss.getY() - 12.5, 50, 25);
+                gc.drawImage(bossImage, boss.getX() - 25, boss.getY() - 12.5, 50, 25);
+            }
+
+            // モードの表示
+            bullets.get(0).showmode(gc);
+
         }
 
         // 爆発エフェクトがあるなら
@@ -367,23 +445,17 @@ public class InvadersGameClient extends Application {
         }
     }
 
-    // 球を出すメソッド
-    private void shoot() {
-        bulletX = player.getX() - 25;
-        bulletY = player.getY() - 25;
-    }
-
     // ゲームオーバ時の処理
     private void gameOver() {
-        score -= 100;
+        score = 0;
         updateRanking(ranking, name, score);
 
         running = false;
     }
 
     // ゲームクリア時の処理
-    private void gameClear(){
-        score += 100;
+    private void gameClear() {
+        score += 1000;
         updateRanking(ranking, name, score);
         clear = 1;
 
@@ -417,12 +489,19 @@ public class InvadersGameClient extends Application {
             // ソケットを作成し、サーバーに接続
             System.out.println("socket = " + socket);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+            PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())),
+                    true);
 
             // 名前の送信
             out.println(name);
 
-            //　ゲーム開始可能の合図を受信
+            // マップデータの取得
+            for (int i = 0; i < 5; i++) {
+                rawMapData[i] = Integer.parseInt(in.readLine());
+                System.out.println(rawMapData[i]); // 確認用
+            }
+
+            // ゲーム開始可能の合図を受信
             String startMs = in.readLine();
             System.out.println(startMs);
 
@@ -433,7 +512,7 @@ public class InvadersGameClient extends Application {
             for (int i = 0; i < oldRanking * 2; i++) {
                 String response = in.readLine();
                 // name->scoreの順で送られてくる
-                if(i % 2 == 0) {
+                if (i % 2 == 0) {
                     nameData = response;
                 } else {
                     scoreData = Integer.parseInt(response);
@@ -450,12 +529,12 @@ public class InvadersGameClient extends Application {
             // 今回の最高プレイ結果を出力
             String resultUser = in.readLine();
             System.out.println(resultUser);
-            String  resultScore = in.readLine();
+            String resultScore = in.readLine();
             System.out.println(resultScore);
 
             out.println("END"); // 終了を示すラベルの送信
-        
-        // 終了したら閉じる
+
+            // 終了したら閉じる
         } finally {
             System.out.println("Closing...");
             socket.close();
@@ -467,7 +546,7 @@ public class InvadersGameClient extends Application {
         for (ScoreEntry entry : scoreList) {
             if (entry.getName().equals(name)) {
                 // スコアが新記録なら上書きして終了
-                if(entry.getScore() < score) {
+                if (entry.getScore() < score) {
                     entry.setScore(score);
                     newScore = true;
                 }

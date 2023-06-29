@@ -13,7 +13,7 @@ public class InvadersGameServer {
         List<ScoreEntry> scoreList = new ArrayList<>(); // スコアを保存するリスト
 
         // 複数のクライアントの接続を許可
-        while(true) {
+        while (true) {
             // クライアントの接続確認
             Socket clientSocket = serverSocket.accept();
             System.out.println("Connection accepted: " + clientSocket);
@@ -21,41 +21,50 @@ public class InvadersGameServer {
             // スレッドを用いてクライアントとデータの送受信
             Thread cliThread = new Thread(() -> {
                 try {
-                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())), true);
+                    BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                    PrintWriter out = new PrintWriter(
+                            new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())), true);
 
-                // 名前とスコアの受信
-                String name = in.readLine();
-                System.out.println("Name: " + name);
-                out.println("インベーダーゲーム"); // ゲーム開始の合図
-                
-                // 保存されているランキングデータの送信
-                sendRankingData(out, scoreList);
-                
-                // 今回のプレイの最高得点の受信
-                int score = Integer.parseInt(in.readLine());
-                System.out.println("Score: " + score);
+                    // 名前とスコアの受信
+                    String name = in.readLine();
+                    System.out.println("Name: " + name);
 
-                // ランキングの更新
-                updateScoreList(scoreList, name, score);
+                    // マップのデータをランダムで送信
+                    for (int i = 0; i < 5; i++) {
+                        Random random = new Random();
+                        out.println(random.nextInt(10) + 1);
+                    }
 
-                // 受信した名前とスコアをクライアントに送信
-                out.println("Name: " + name);
-                out.println("Score: " + score);
+                    // ゲーム開始の合図
+                    out.println("インベーダーゲーム");
 
-                out.println("ゲーム終了"); // 終了を示すためのラベル
+                    // 保存されているランキングデータの送信
+                    sendRankingData(out, scoreList);
 
-                System.out.println("Data sent to client.");
+                    // 今回のプレイの最高得点の受信
+                    int score = Integer.parseInt(in.readLine());
+                    System.out.println("Score: " + score);
 
-            }catch (IOException ioe) {
-                ioe.printStackTrace();
-            } finally {
-                try {
-                    clientSocket.close();
+                    // ランキングの更新
+                    updateScoreList(scoreList, name, score);
+
+                    // 受信した名前とスコアをクライアントに送信
+                    out.println("Name: " + name);
+                    out.println("Score: " + score);
+
+                    out.println("ゲーム終了"); // 終了を示すためのラベル
+
+                    System.out.println("Data sent to client.");
+
                 } catch (IOException ioe) {
                     ioe.printStackTrace();
+                } finally {
+                    try {
+                        clientSocket.close();
+                    } catch (IOException ioe) {
+                        ioe.printStackTrace();
+                    }
                 }
-            }
             });
 
             cliThread.start();
@@ -67,7 +76,8 @@ public class InvadersGameServer {
         for (ScoreEntry entry : scoreList) {
             if (entry.getName().equals(name)) {
                 // スコアが新記録なら上書きして終了
-                if(entry.getScore() < score) entry.setScore(score);
+                if (entry.getScore() < score)
+                    entry.setScore(score);
                 return;
             }
         }
@@ -79,7 +89,7 @@ public class InvadersGameServer {
     private static void sendRankingData(PrintWriter out, List<ScoreEntry> scoreList) {
         // スコアを降順にソート
         Collections.sort(scoreList, Collections.reverseOrder());
-        
+
         out.println(scoreList.size());
         // ランキングデータをnameとscoreの二行で送信
         for (int i = 0; i < scoreList.size(); i++) {
