@@ -214,7 +214,7 @@ public class InvadersGameClient extends Application {
                 for (int k = 0; k < column; k++) {
                     invaderX = (double) (WIDTH / (row + 1)) * (double) indexX;
                     invaderY = k + 1 + indexY * 40;
-                    invaders.get(i).add(new Invader(IMAGES[i], invaderX, invaderY, (i / 2 + 1)));
+                    invaders.get(i).add(new Invader(IMAGES[i], invaderX, invaderY, (i + 1)));
                     invadersDestroyed.get(i).add(false);
                     indexY++;
                 }
@@ -241,13 +241,13 @@ public class InvadersGameClient extends Application {
         }
 
         int currentTIme = (int) ((System.nanoTime() - startTime) / 1_000_000_000);
-        // 各敵機についてフレームごとに敵機を左に動かす
+        // 各敵機についてフレームごとに敵機を下に動かす
         for (int i = 0; i < NUMS_INVADERS.length; i++) {
             for (int j = 0; j < NUMS_INVADERS[i]; j++) {
                 Invader invader = invaders.get(i).get(j);
                 Boolean invaderDestroyed = invadersDestroyed.get(i).get(j);
                 if (currentTIme >= i * 10) {
-                    invader.moveY(INVADER_SPEED_Y);
+                    invader.moveY((i == 4) ? INVADER_SPEED_Y / 2 : INVADER_SPEED_Y);
                     // 一番下まで行ったら強制的に破壊
                     if (invader.getY() >= (HEIGHT - 50)) {
                         invadersDestroyed.get(i).set(j, true);
@@ -263,7 +263,7 @@ public class InvadersGameClient extends Application {
                             bullet.hit();// 死んでる敵の当たり判定も残っている
                             // 敵機の体力が0になったら破壊判定をtrueにして、スコアを100追加
                             if (invader.getHealth() <= 0) {
-                                score += 100;
+                                score += 100 * bullet.getamode();
                                 invadersDestroyed.get(i).set(j, true);
                                 break;
                             }
@@ -447,7 +447,7 @@ public class InvadersGameClient extends Application {
     private void showBottomBar(GraphicsContext gc, int currentTIme, int health) {
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
-         gc.fillText(("Name: " + name + "   Time: " + currentTIme + "   Score: " + score + "   Health: " + health), 10, HEIGHT - 30);
+        gc.fillText(("Name: " + name + "   Time: " + currentTIme + "   Score: " + score + "   Health: " + health), 10, HEIGHT - 30);
         gc.fillText("↑: up,  ↓: down,  →: right,  ←: left,  Space: shot,  B: change mode,  V: change strength,  E: exit game", 10, HEIGHT - 10);
     }
 
