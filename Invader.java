@@ -7,9 +7,11 @@ public class Invader {
     private int health;
     private boolean alternateImage = false;
     private int currentFrame = 0; // フレーム数
+    private String imageName;
 
-    // x、y座標と体力を持ったインスタンスを生成
-    public Invader(double x, double y, int health) {
+    // x、y座標と体力・使用画像の舐めを持ったインスタンスを生成
+    public Invader(String imageName,double x, double y, int health) {
+        this.imageName = imageName;
         this.x = x;
         this.y = y;
         this.health = health;
@@ -62,7 +64,7 @@ public class Invader {
         if (currentFrame % 6 == (0 | 1 | 2)) {
             alternateImage = !alternateImage;
         }
-        Image alienImage = new Image("alien.png");
+        Image alienImage = new Image(imageName);
         double imageWidth = alienImage.getWidth() / 2;
         double imageHeight = alienImage.getHeight();
         double destWidth = 50;
