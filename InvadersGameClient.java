@@ -222,11 +222,13 @@ public class InvadersGameClient extends Application {
             }
         }
 
+        // ボスを宣言
         boss = new Invader("boss.png", 0, 50, 20);
 
         // 爆発エフェクトの宣言
         explosions = new ArrayList<>();
 
+        // 自機の打つ弾を宣言
         bullets = new ArrayList<>();
         for (int i = 0; i < NUM_BULLETS; i++) {
             bullets.add(new Bullet(0, -1000));
@@ -254,7 +256,7 @@ public class InvadersGameClient extends Application {
                     }
                 }
 
-                // 球と敵機が衝突したか判定
+                // 弾と敵機が衝突したか判定
                 for (int k = 0; k < NUM_BULLETS; k++) {
                     Bullet bullet = bullets.get(k);
                     if (checkCollision(invader, bullet)) {
@@ -304,6 +306,7 @@ public class InvadersGameClient extends Application {
             }
         }
 
+        // 弾とボスの衝突判定
         for (int k = 0; k < NUM_BULLETS; k++) {
             Bullet bullet = bullets.get(k);
             if (checkCollision(boss, bullet)) {
@@ -430,6 +433,7 @@ public class InvadersGameClient extends Application {
                 }
             }
 
+            // FinalStageのときにボス表示
             if (!bossDestroyed && currentTIme >= 42)
                 boss.updateFrame(gc);
 
@@ -445,10 +449,27 @@ public class InvadersGameClient extends Application {
         }
     }
 
+    // 下部の表示するゲーム内の情報を出力
     private void showBottomBar(GraphicsContext gc, int currentTIme, int health) {
+        // 経過時間によってステージの表示を変える
+        String stage = "0";
+        if (currentTIme < 10)
+            stage = "1";
+        else if (currentTIme < 20)
+            stage = "2";
+        else if (currentTIme < 30)
+            stage = "3";
+        else if (currentTIme < 40)
+            stage = "4";
+        else
+            stage = "Final";
+
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
-        gc.fillText(("Name: " + name + "   Time: " + currentTIme + "   Score: " + score + "   Health: " + health), 10,
+        gc.fillText(
+                ("Name: " + name + "   Time: " + currentTIme + "   Stage: " + stage + "   Score: " + score
+                        + "   Health: " + health),
+                10,
                 HEIGHT - 30);
         gc.fillText(
                 "↑: up,  ↓: down,  →: right,  ←: left,  Space: shot,  B: change mode,  V: change strength,  E: exit game",
