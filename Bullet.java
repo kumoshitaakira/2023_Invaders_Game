@@ -44,7 +44,7 @@ public class Bullet {
                 this.range = 100;
                 break;
             case 2:
-                this.speed = 30;  // 1
+                this.speed = 30; // 1
                 this.range = 700;
                 break;
         }

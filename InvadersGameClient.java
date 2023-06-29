@@ -430,7 +430,8 @@ public class InvadersGameClient extends Application {
                 }
             }
 
-            if (!bossDestroyed && currentTIme >= 42) boss.updateFrame(gc);
+            if (!bossDestroyed && currentTIme >= 42)
+                boss.updateFrame(gc);
 
             // 下部の説明等を表示
             bullets.get(0).showmode(gc);
@@ -447,8 +448,11 @@ public class InvadersGameClient extends Application {
     private void showBottomBar(GraphicsContext gc, int currentTIme, int health) {
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
-        gc.fillText(("Name: " + name + "   Time: " + currentTIme + "   Score: " + score + "   Health: " + health), 10, HEIGHT - 30);
-        gc.fillText("↑: up,  ↓: down,  →: right,  ←: left,  Space: shot,  B: change mode,  V: change strength,  E: exit game", 10, HEIGHT - 10);
+        gc.fillText(("Name: " + name + "   Time: " + currentTIme + "   Score: " + score + "   Health: " + health), 10,
+                HEIGHT - 30);
+        gc.fillText(
+                "↑: up,  ↓: down,  →: right,  ←: left,  Space: shot,  B: change mode,  V: change strength,  E: exit game",
+                10, HEIGHT - 10);
     }
 
     // ゲームオーバ時の処理
