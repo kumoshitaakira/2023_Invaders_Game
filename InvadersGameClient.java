@@ -196,7 +196,7 @@ public class InvadersGameClient extends Application {
         clear = 0;
 
         // 自機の宣言
-        player = new Invader("player.png", (WIDTH / 2), (HEIGHT - 60), 50);
+        player = new Invader("player.png", (WIDTH / 2), (HEIGHT - 60), 30);
 
         // 敵機の宣言
         invaders = new ArrayList<>();
