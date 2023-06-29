@@ -85,7 +85,7 @@ public class Bullet {
 
     // インベーダークラスのhit同様、衝突時に貫通力を下げる
     public void hit() {
-        this.pier--;
+        --this.pier;
     }
 
     // Bキーを押すことで呼び出す、弾の撃ち方を変更
